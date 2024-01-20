@@ -7,6 +7,8 @@
 <body>
 		<h1 id="number"></h1>
 		<button id="increment">Increment</button>
+		<textarea id="message"></textarea>
+		<button id="submit">Submit</button>
 
 		<script>
 				const socket = io();
@@ -18,6 +20,11 @@
 				document.getElementById('increment').addEventListener('click', () => {
 						socket.emit('increment');
 				});
-		</script>
+
+			document.getElementById('submit').addEventListener('click', () => {
+									const message = document.getElementById('message').value;
+									socket.emit('submit', message);
+							});
+	</script>
 </body>
 </html>
