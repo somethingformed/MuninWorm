@@ -7,7 +7,7 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let db = new sqlite3.Database(':memory:', (err) => {
+let db = new sqlite3.Database('database.db', (err) => {
 	if (err) {
 		return console.error(err.message);
 	}
