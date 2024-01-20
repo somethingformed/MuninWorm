@@ -1,41 +1,62 @@
 <!DOCTYPE html>
 <html>
 <head>
-		<title>Number Incrementer</title>
-		<script src="/socket.io/socket.io.js"></script>
+    <title>Number Incrementer</title>
+    <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
-		<h1 id="number"></h1>
-		<button id="increment">Increment</button>
-		<textarea id="message"></textarea>
-		<button id="submit">Submit</button>
-		<ul id="messages"></ul>
+    <h1 id="number"></h1>
+    <button id="increment">Increment</button>
+    <textarea id="message"></textarea>
+    <button id="submit">Submit</button>
+    <ul id="messages"></ul>
 
-		<script>
-				const socket = io();
+    <script>
+        const socket = io();
+        const messagesList = document.getElementById('messages');
+        const messageInput = document.getElementById('message');
+        const submitButton = document.getElementById('submit');
 
-				socket.on('recentMessages', (messages) => {
-						const messagesList = document.getElementById('messages');
-						messages.reverse().forEach((message) => {
-								const listItem = document.createElement('li');
-								listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
-								messagesList.appendChild(listItem);
-						});
-				});
+        socket.on('number', (number) => {
+            document.getElementById('number').innerText = number;
+        });
 
+        socket.on('currentMessage', (message) => {
+            if (message) {
+                messageInput.style.display = 'none';
+                submitButton.style.display = 'none';
+            } else {
+                messageInput.style.display = 'block';
+                submitButton.style.display = 'block';
+            }
+        });
 
-				socket.on('number', (number) => {
-						document.getElementById('number').innerText = number;
-				});
+        socket.on('recentMessages', (messages) => {
+            messagesList.innerHTML = '';
+            messages.reverse().forEach((message) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
+                messagesList.appendChild(listItem);
+            });
+        });
 
-				document.getElementById('increment').addEventListener('click', () => {
-						socket.emit('increment');
-				});
+        socket.on('newMessage', (message) => {
+            const listItem = document.createElement('li');
+            listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
+            messagesList.appendChild(listItem);
+        });
 
-			document.getElementById('submit').addEventListener('click', () => {
-									const message = document.getElementById('message').value;
-									socket.emit('submit', message);
-							});
-	</script>
+        document.getElementById('increment').addEventListener('click', () => {
+            socket.emit('increment');
+        });
+
+        submitButton.addEventListener('click', () => {
+            const message = messageInput.value;
+            socket.emit('submit', message);
+            messageInput.value = '';
+            messageInput.style.display = 'none';
+            submitButton.style.display = 'none';
+        });
+    </script>
 </body>
 </html>
