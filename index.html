@@ -9,9 +9,20 @@
 		<button id="increment">Increment</button>
 		<textarea id="message"></textarea>
 		<button id="submit">Submit</button>
+		<ul id="messages"></ul>
 
 		<script>
 				const socket = io();
+
+				socket.on('recentMessages', (messages) => {
+						const messagesList = document.getElementById('messages');
+						messages.reverse().forEach((message) => {
+								const listItem = document.createElement('li');
+								listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
+								messagesList.appendChild(listItem);
+						});
+				});
+
 
 				socket.on('number', (number) => {
 						document.getElementById('number').innerText = number;

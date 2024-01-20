@@ -31,6 +31,13 @@
 						socket.emit('number', row.value);
 					});
 
+				db.all('SELECT * FROM messages ORDER BY id DESC LIMIT 10', [], (err, rows) => {
+					if (err) {
+						return console.error(err.message);
+					}
+					socket.emit('recentMessages', rows.reverse());
+				});
+				
 					socket.on('increment', () => {
 							db.run(`UPDATE numbers SET value = value + 1`, function(err) {
 								if (err) {
