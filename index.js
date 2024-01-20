@@ -7,22 +7,29 @@ const app = express();
 const server = http.createServer(app);
 const io = socketIo(server);
 
-let db = new sqlite3.Database('database.db', (err) => {
+let db = new sqlite3.Database('./database.db', (err) => {
 	if (err) {
 		return console.error(err.message);
 	}
-	console.log('Connected to the in-memory SQlite database.');
+	console.log('Connected to the SQlite database.');
 });
 
-db.run('CREATE TABLE numbers(value INTEGER)', function(err) {
+db.get(`SELECT name FROM sqlite_master WHERE type='table' AND name='numbers';`, (err, row) => {
 	if (err) {
-		return console.log(err.message);
+		return console.error(err.message);
 	}
-	db.run(`INSERT INTO numbers(value) VALUES(?)`, [0], function(err) {
-		if (err) {
-			return console.log(err.message);
-		}
-	});
+	if (!row) {
+		db.run('CREATE TABLE numbers(value INTEGER)', function(err) {
+			if (err) {
+				return console.log(err.message);
+			}
+			db.run(`INSERT INTO numbers(value) VALUES(?)`, [0], function(err) {
+				if (err) {
+					return console.log(err.message);
+				}
+			});
+		});
+	}
 });
 
 app.get('/', (req, res) => {
