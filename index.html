@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+		<title>Number Incrementer</title>
+		<script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+		<h1 id="number"></h1>
+		<button id="increment">Increment</button>
+
+		<script>
+				const socket = io();
+
+				socket.on('number', (number) => {
+						document.getElementById('number').innerText = number;
+				});
+
+				document.getElementById('increment').addEventListener('click', () => {
+						socket.emit('increment');
+				});
+		</script>
+</body>
+</html>
