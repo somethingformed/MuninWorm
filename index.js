@@ -15,7 +15,20 @@ let db = new sqlite3.Database('./database.db', (err) => {
 });
 
 db.serialize(() => {
-	db.run(`CREATE TABLE IF NOT EXISTS numbers(value INTEGER)`);
+	db.run(`CREATE TABLE IF NOT EXISTS numbers(value INTEGER)`, function() {
+		db.get('SELECT value FROM numbers', [], (err, row) => {
+			if (err) {
+				return console.error(err.message);
+			}
+			if (!row) {
+				db.run(`INSERT INTO numbers(value) VALUES(?)`, [0], function(err) {
+					if (err) {
+						return console.log(err.message);
+					}
+				});
+			}
+		});
+	});
 	db.run(`CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, text TEXT)`);
 });
 
