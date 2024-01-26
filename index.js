@@ -38,15 +38,35 @@ app.get('/', (req, res) => {
 		res.sendFile(__dirname + '/index.html');
 });
 
-io.on('connection', (socket) => {
-		db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', (err, rows) => {
-				if (err) {
-						return console.error(err.message);
-				}
-				socket.emit('newMessage', rows);
+function getRowValueFromNumbersTable() {
+		return new Promise((resolve, reject) => {
+				db.get('SELECT value FROM numbers', [], (err, row) => {
+						if (err) {
+								reject(err);
+						} else {
+								resolve(row);
+						}
+				});
 		});
+}
+
+function insertMessageIntoDatabase(id, message) {
+		// Assuming you have a database connection and can execute an insert query
+		db.run('INSERT INTO messages (id, text) VALUES (?, ?)', [id, message], (err) => {
+				if (err) {
+						console.error(err.message);
+				}
+		});
+}
 
 
+io.on('connection', (socket) => {
+	db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', async (err, rows) => {
+			if (err) {
+					return console.error(err.message);
+			}
+			socket.emit('newMessage', rows);
+	});
 
 	
 	
@@ -85,19 +105,18 @@ io.on('connection', (socket) => {
 				});
 		});
 
-	socket.on('submit', (message) => {
-			db.get('SELECT value FROM numbers', [], (err, row) => {
-					if (err) {
-							return console.error(err.message);
-					}
-					db.run(`INSERT OR IGNORE INTO messages(id, text) VALUES(?, ?)`, [row.value, message], function(err) {
-							if (err) {
-									return console.error(err.message);
-							}
-							io.sockets.emit('newMessage', [{ id: row.value, text: message }]); // Emit the new message to all connected sockets
-					});
-			});
+	socket.on('submit', async (message) => {
+			try {
+					const row = await getRowValueFromNumbersTable();  // Assume a function to fetch row value from numbers table
+					await insertMessageIntoDatabase(row.value, message);  // Assume a function to insert message into the database
+					io.sockets.emit('newMessage', [{ id: row.value, text: message }]); // Emit the new message to all connected sockets
+			} catch (err) {
+					console.error(err.message);
+			}
 	});
+
+
+
 });
 
 server.listen(3000, () => {

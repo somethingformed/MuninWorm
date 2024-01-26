@@ -43,13 +43,13 @@
             socket.emit('increment');
         });
 
-        submitButton.addEventListener('click', () => {
-            const message = messageInput.value;
-            socket.emit('submit', message);
-            messageInput.value = '';
-            messageInput.style.display = 'none';
-            submitButton.style.display = 'none';
-        });
+			submitButton.addEventListener('click', () => {
+					const message = messageInput.value;
+					socket.emit('submit', message);
+					messageInput.value = '';
+					messageInput.style.display = 'none';
+					submitButton.style.display = 'none';
+			});
     </script>
 </body>
 </html>
