@@ -1,63 +1,68 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+  <head>
     <title>Number Incrementer</title>
     <script src="/socket.io/socket.io.js"></script>
-</head>
-<body>
+  </head>
+  <body>
     <h1 id="number"></h1>
     <button id="increment">Increment</button>
-    <textarea id="message"></textarea>
-    <button id="submit">Submit</button>
+    <div id="messageSection">
+      <textarea id="message"></textarea>
+      <button id="submit">Submit</button>
+    </div>
     <ul id="messages"></ul>
-
     <script>
-        const socket = io();
-        const messagesList = document.getElementById('messages');
-        const messageInput = document.getElementById('message');
-        const submitButton = document.getElementById('submit');
+      const socket = io();
+      const messagesList = document.getElementById("messages");
+      const messageInput = document.getElementById("message");
+      const submitButton = document.getElementById("submit");
+      const messageSection = document.getElementById("messageSection");
+      socket.on("number", (number) => {
+        document.getElementById("number").innerText = number;
+      });
+      socket.on("currentMessage", (message) => {
+        if (message) {
+          messageSection.style.display = "none";
+        } else {
+          messageSection.style.display = "block";
+        }
+      });
+      socket.on("newMessage", (messages) => {
+        messagesList.innerHTML = messages
+          .map(
+            (message) => `<li>ID: ${message.id}, Message: ${message.text}</li>`,
+          )
+          .join("");
+      });
 
-        socket.on('number', (number) => {
-            document.getElementById('number').innerText = number;
-        });
+      socket.on("refreshMessages", () => {
+        // Make a request to the server to fetch the most recent 10 messages
+        fetch("/getRecentMessages") // Assuming a route to fetch recent messages is defined in your server
+          .then((response) => response.json())
+          .then((messages) => {
+            // Clear the messagesList
+            messagesList.innerHTML = messages
+              .map(
+                (message) =>
+                  `<li>ID: ${message.id}, Message: ${message.text}</li>`,
+              )
+              .join("");
+          })
+          .catch((error) => console.error(error));
+      });
 
-        socket.on('currentMessage', (message) => {
-            if (message) {
-                messageInput.style.display = 'none';
-                submitButton.style.display = 'none';
-            } else {
-                messageInput.style.display = 'block';
-                submitButton.style.display = 'block';
-            }
-        });
+      document.getElementById("increment").addEventListener("click", () => {
+        socket.emit("increment");
+      });
 
-        socket.on('newMessage', (messages) => {
-            messagesList.innerHTML = messages.map(message => `<li>ID: ${message.id}, Message: ${message.text}</li>`).join('');
-        });
-
-        socket.on('refreshMessages', () => {
-            // Make a request to the server to fetch the most recent 10 messages
-            fetch('/getRecentMessages') // Assuming a route to fetch recent messages is defined in your server
-                .then(response => response.json())
-                .then(messages => {
-                    // Clear the messagesList
-                    messagesList.innerHTML = messages.map(message => `<li>ID: ${message.id}, Message: ${message.text}</li>`).join('');
-                })
-                .catch(error => console.error(error));
-        });
-
-        document.getElementById('increment').addEventListener('click', () => {
-            socket.emit('increment');
-        });
-
-        submitButton.addEventListener('click', () => {
-            const message = messageInput.value;
-            socket.emit('submit', message);
-            messageInput.value = '';
-            messageInput.style.display = 'none';
-            submitButton.style.display = 'none';
-        });
-
+      submitButton.addEventListener("click", () => {
+        const message = messageInput.value;
+        socket.emit("submit", message);
+        messageInput.value = "";
+        messageInput.style.display = "none";
+        submitButton.style.display = "none";
+      });
     </script>
-</body>
+  </body>
 </html>
