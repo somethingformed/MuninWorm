@@ -31,20 +31,13 @@
             }
         });
 
-        socket.on('recentMessages', (messages) => {
-            messagesList.innerHTML = '';
-            messages.reverse().forEach((message) => {
-                const listItem = document.createElement('li');
-                listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
-                messagesList.appendChild(listItem);
-            });
-        });
-
-        socket.on('newMessage', (message) => {
-            const listItem = document.createElement('li');
-            listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
-            messagesList.appendChild(listItem);
-        });
+			socket.on('newMessage', (messages) => {
+					messages.forEach(message => {
+							const listItem = document.createElement('li');
+							listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
+							messagesList.appendChild(listItem);
+					});
+			});
 
         document.getElementById('increment').addEventListener('click', () => {
             socket.emit('increment');

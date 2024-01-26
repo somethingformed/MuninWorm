@@ -1,3 +1,5 @@
+// Adjusted index.js with aligned event names between client side and server side
+
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -37,7 +39,18 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
-		db.get('SELECT value FROM numbers', [], (err, row) => {
+
+	db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', (err, rows) => {
+			if (err) {
+					return console.error(err.message);
+			}
+			socket.emit('newMessage', rows.reverse()); // Emit the most recent 10 messages to the client side
+	});
+
+
+	
+	
+	db.get('SELECT value FROM numbers', [], (err, row) => {
 			if (err) {
 				return console.error(err.message);
 			}
