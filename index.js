@@ -39,13 +39,13 @@ app.get('/', (req, res) => {
 });
 
 io.on('connection', (socket) => {
+		db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', (err, rows) => {
+				if (err) {
+						return console.error(err.message);
+				}
+				socket.emit('newMessage', rows);
+		});
 
-	db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', (err, rows) => {
-			if (err) {
-					return console.error(err.message);
-			}
-			socket.emit('newMessage', rows.reverse()); // Emit the most recent 10 messages to the client side
-	});
 
 
 	
