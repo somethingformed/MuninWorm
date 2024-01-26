@@ -85,19 +85,19 @@ io.on('connection', (socket) => {
 				});
 		});
 
-		socket.on('submit', (message) => {
-				db.get('SELECT value FROM numbers', [], (err, row) => {
+	socket.on('submit', (message) => {
+			db.get('SELECT value FROM numbers', [], (err, row) => {
 					if (err) {
-						return console.error(err.message);
+							return console.error(err.message);
 					}
 					db.run(`INSERT OR IGNORE INTO messages(id, text) VALUES(?, ?)`, [row.value, message], function(err) {
-						if (err) {
-							return console.error(err.message);
-						}
-						io.sockets.emit('newMessage', { id: row.value, text: message });
+							if (err) {
+									return console.error(err.message);
+							}
+							io.sockets.emit('newMessage', [{ id: row.value, text: message }]); // Emit the new message to all connected sockets
 					});
-				});
-		});
+			});
+	});
 });
 
 server.listen(3000, () => {
