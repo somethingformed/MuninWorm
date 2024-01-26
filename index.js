@@ -38,6 +38,17 @@ app.get('/', (req, res) => {
 		res.sendFile(__dirname + '/index.html');
 });
 
+app.get('/getRecentMessages', (req, res) => {
+		// Fetch the most recent 10 messages from the database and send them as a JSON response
+		db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', (err, rows) => {
+				if (err) {
+						return console.error(err.message);
+				}
+				res.json(rows);
+		});
+});
+
+
 function getRowValueFromNumbersTable() {
 		return new Promise((resolve, reject) => {
 				db.get('SELECT value FROM numbers', [], (err, row) => {
@@ -107,9 +118,10 @@ io.on('connection', (socket) => {
 
 	socket.on('submit', async (message) => {
 			try {
-					const row = await getRowValueFromNumbersTable();  // Assume a function to fetch row value from numbers table
-					await insertMessageIntoDatabase(row.value, message);  // Assume a function to insert message into the database
-					io.sockets.emit('newMessage', [{ id: row.value, text: message }]); // Emit the new message to all connected sockets
+					const row = await getRowValueFromNumbersTable();
+					await insertMessageIntoDatabase(row.value, message);
+					io.sockets.emit('newMessage', [{ id: row.value, text: message }]);
+					io.sockets.emit('refreshMessages'); // Emit the refreshMessages event
 			} catch (err) {
 					console.error(err.message);
 			}

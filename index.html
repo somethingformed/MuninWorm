@@ -39,6 +39,23 @@
 					});
 			});
 
+			socket.on('refreshMessages', () => {
+					// Make a request to the server to fetch the most recent 10 messages
+					fetch('/getRecentMessages') // Assuming a route to fetch recent messages is defined in your server
+							.then(response => response.json())
+							.then(messages => {
+									// Clear the messagesList
+									messagesList.innerHTML = '';
+									// Append the most recent 10 messages to the messagesList
+									messages.forEach(message => {
+											const listItem = document.createElement('li');
+											listItem.textContent = `ID: ${message.id}, Message: ${message.text}`;
+											messagesList.appendChild(listItem);
+									});
+							})
+							.catch(error => console.error(error));
+			});
+			
         document.getElementById('increment').addEventListener('click', () => {
             socket.emit('increment');
         });
@@ -50,6 +67,9 @@
 					messageInput.style.display = 'none';
 					submitButton.style.display = 'none';
 			});
-    </script>
+
+		
+		
+		</script>
 </body>
 </html>
