@@ -1,5 +1,3 @@
-// Adjusted index.js with aligned event names between client side and server side
-
 const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
@@ -10,28 +8,28 @@ const server = http.createServer(app);
 const io = socketIo(server);
 
 let db = new sqlite3.Database('./database.db', (err) => {
-	if (err) {
-		return console.error(err.message);
-	}
-	console.log('Connected to the SQlite database.');
+		if (err) {
+				return console.error(err.message);
+		}
+		console.log('Connected to the SQlite database.');
 });
 
 db.serialize(() => {
-	db.run(`CREATE TABLE IF NOT EXISTS numbers(value INTEGER)`, function() {
-		db.get('SELECT value FROM numbers', [], (err, row) => {
-			if (err) {
-				return console.error(err.message);
-			}
-			if (!row) {
-				db.run(`INSERT INTO numbers(value) VALUES(?)`, [0], function(err) {
-					if (err) {
-						return console.log(err.message);
-					}
+		db.run(`CREATE TABLE IF NOT EXISTS numbers(value INTEGER)`, function() {
+				db.get('SELECT value FROM numbers', [], (err, row) => {
+						if (err) {
+								return console.error(err.message);
+						}
+						if (!row) {
+								db.run(`INSERT INTO numbers(value) VALUES(?)`, [0], function(err) {
+										if (err) {
+												return console.log(err.message);
+										}
+								});
+						}
 				});
-			}
 		});
-	});
-	db.run(`CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, text TEXT)`);
+		db.run(`CREATE TABLE IF NOT EXISTS messages(id INTEGER PRIMARY KEY, text TEXT)`);
 });
 
 app.get('/', (req, res) => {
@@ -39,7 +37,6 @@ app.get('/', (req, res) => {
 });
 
 app.get('/getRecentMessages', (req, res) => {
-		// Fetch the most recent 10 messages from the database and send them as a JSON response
 		db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', (err, rows) => {
 				if (err) {
 						return console.error(err.message);
@@ -48,8 +45,7 @@ app.get('/getRecentMessages', (req, res) => {
 		});
 });
 
-
-function getRowValueFromNumbersTable() {
+const getRowValueFromNumbersTable = () => {
 		return new Promise((resolve, reject) => {
 				db.get('SELECT value FROM numbers', [], (err, row) => {
 						if (err) {
@@ -59,75 +55,69 @@ function getRowValueFromNumbersTable() {
 						}
 				});
 		});
-}
+};
 
-function insertMessageIntoDatabase(id, message) {
-		// Assuming you have a database connection and can execute an insert query
+const insertMessageIntoDatabase = (id, message) => {
 		db.run('INSERT INTO messages (id, text) VALUES (?, ?)', [id, message], (err) => {
 				if (err) {
 						console.error(err.message);
 				}
 		});
-}
-
+};
 
 io.on('connection', (socket) => {
-	db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', async (err, rows) => {
-			if (err) {
-					return console.error(err.message);
-			}
-			socket.emit('newMessage', rows);
-	});
-
-	
-	
-	db.get('SELECT value FROM numbers', [], (err, row) => {
-			if (err) {
-				return console.error(err.message);
-			}
-			socket.emit('number', row.value);
-
-			db.get('SELECT text FROM messages WHERE id = ?', [row.value], (err, row) => {
+		db.all('SELECT id, text FROM messages ORDER BY id DESC LIMIT 10', async (err, rows) => {
 				if (err) {
-					return console.error(err.message);
+						return console.error(err.message);
 				}
-				socket.emit('currentMessage', row ? row.text : null);
-			});
+				socket.emit('newMessage', rows);
+		});
+
+		db.get('SELECT value FROM numbers', [], (err, row) => {
+				if (err) {
+						return console.error(err.message);
+				}
+				socket.emit('number', row.value);
+
+				db.get('SELECT text FROM messages WHERE id = ?', [row.value], (err, row) => {
+						if (err) {
+								return console.error(err.message);
+						}
+						socket.emit('currentMessage', row ? row.text : null);
+				});
 		});
 
 		socket.on('increment', () => {
 				db.run(`UPDATE numbers SET value = value + 1`, function(err) {
-					if (err) {
-						return console.error(err.message);
-					}
-					db.get('SELECT value FROM numbers', [], (err, row) => {
 						if (err) {
-							return console.error(err.message);
-						}
-						io.sockets.emit('number', row.value);
-
-						db.get('SELECT text FROM messages WHERE id = ?', [row.value], (err, row) => {
-							if (err) {
 								return console.error(err.message);
-							}
-							io.sockets.emit('currentMessage', row ? row.text : null);
+						}
+						db.get('SELECT value FROM numbers', [], (err, row) => {
+								if (err) {
+										return console.error(err.message);
+								}
+								io.sockets.emit('number', row.value);
+
+								db.get('SELECT text FROM messages WHERE id = ?', [row.value], (err, row) => {
+										if (err) {
+												return console.error(err.message);
+										}
+										io.sockets.emit('currentMessage', row ? row.text : null);
+								});
 						});
-					});
 				});
 		});
 
-	socket.on('submit', async (message) => {
-			try {
-					const row = await getRowValueFromNumbersTable();
-					await insertMessageIntoDatabase(row.value, message);
-					io.sockets.emit('newMessage', [{ id: row.value, text: message }]);
-					io.sockets.emit('refreshMessages'); // Emit the refreshMessages event
-			} catch (err) {
-					console.error(err.message);
-			}
-	});
-
-
+		socket.on('submit', async (message) => {
+				try {
+						const row = await getRowValueFromNumbersTable();
+						await insertMessageIntoDatabase(row.value, message);
+						io.sockets.emit('newMessage', [{ id: row.value, text: message }]);
+						io.sockets.emit('refreshMessages'); // Emit the refreshMessages event
+				} catch (err) {
+						console.error(err.message);
+				}
+		});
 
 });
 
